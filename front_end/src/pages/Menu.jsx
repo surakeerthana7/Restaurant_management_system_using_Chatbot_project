@@ -4,6 +4,7 @@ import { fetchAPI } from "../services/api";
 
 function Menu() {
     const [foods, setFoods] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("All");
     const [message, setMessage] = useState("Loading menu...");
     const [success, setSuccess] = useState("");
 
@@ -21,10 +22,29 @@ function Menu() {
         loadMenu();
     }, []);
 
+    const categories = [
+        "All",
+        ...new Set(
+            foods
+                .map((food) => food.category)
+                .filter(Boolean)
+        )
+    ];
+
+    const filteredFoods =
+        selectedCategory === "All"
+            ? foods
+            : foods.filter(
+                (food) =>
+                    food.category?.toLowerCase() ===
+                    selectedCategory.toLowerCase()
+            );
+
     const addToCart = (food) => {
         const cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
         const foodId = food.id || food._id;
+
         const existingItem = cart.find(
             (item) => String(item.id) === String(foodId)
         );
@@ -45,9 +65,7 @@ function Menu() {
 
         setSuccess(`${food.name} added to cart!`);
 
-        setTimeout(() => {
-            setSuccess("");
-        }, 2000);
+        setTimeout(() => setSuccess(""), 2000);
     };
 
     return (
@@ -62,11 +80,32 @@ function Menu() {
                 </p>
             )}
 
+            {!message && (
+                <div className="category-buttons">
+                    {categories.map((category) => (
+                        <button
+                            key={category}
+                            onClick={() => setSelectedCategory(category)}
+                            className={
+                                selectedCategory === category
+                                    ? "active-category"
+                                    : ""
+                            }
+                        >
+                            {category}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             <div className="food-list">
-                {foods.map((food) => (
+                {filteredFoods.map((food) => (
                     <div className="food-card" key={food.id || food._id}>
                         <img
-                            src={food.image || "https://placehold.co/500x350?text=Food+Image"}
+                            src={
+                                food.image ||
+                                "https://placehold.co/500x350?text=Food+Image"
+                            }
                             alt={food.name}
                             onError={(e) => {
                                 e.currentTarget.src =
@@ -85,8 +124,8 @@ function Menu() {
                 ))}
             </div>
 
-            {!message && foods.length === 0 && (
-                <p>No food items available yet.</p>
+            {!message && filteredFoods.length === 0 && (
+                <p>No food items found in this category.</p>
             )}
         </div>
     );
