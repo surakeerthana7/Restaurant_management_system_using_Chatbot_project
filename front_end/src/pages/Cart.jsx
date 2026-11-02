@@ -55,7 +55,7 @@ function Cart() {
 
     return (
         <div className="page-container">
-            <h1>My Shopping Cart</h1>
+            <h1>My Cart</h1>
 
             {cart.length === 0 ? (
                 <div>
