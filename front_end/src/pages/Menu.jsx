@@ -2,22 +2,10 @@
 import { useEffect, useState } from "react";
 import { fetchAPI } from "../services/api";
 
-const categories = [
-    "All",
-    "Starters",
-    "Veg Main Course",
-    "Non-Veg Main Course",
-    "Biryani",
-    "Rice and Noodles",
-    "South Indian",
-    "Desserts",
-    "Beverages"
-];
-
 function Menu() {
     const [foods, setFoods] = useState([]);
     const [message, setMessage] = useState("Loading menu...");
-    const [selectedCategory, setSelectedCategory] = useState("All");
+    const [success, setSuccess] = useState("");
 
     useEffect(() => {
         const loadMenu = async () => {
@@ -33,79 +21,72 @@ function Menu() {
         loadMenu();
     }, []);
 
-    const filteredFoods =
-        selectedCategory === "All"
-            ? foods
-            : foods.filter(
-                (food) => food.category === selectedCategory
-            );
+    const addToCart = (food) => {
+        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+        const foodId = food.id || food._id;
+        const existingItem = cart.find(
+            (item) => String(item.id) === String(foodId)
+        );
+
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({
+                id: foodId,
+                name: food.name,
+                price: Number(food.price),
+                image: food.image || "",
+                quantity: 1
+            });
+        }
+
+        localStorage.setItem("cart", JSON.stringify(cart));
+
+        setSuccess(`${food.name} added to cart!`);
+
+        setTimeout(() => {
+            setSuccess("");
+        }, 2000);
+    };
 
     return (
         <div className="menu-page">
             <h1>Our Food Menu</h1>
-            <p className="menu-subtitle">
-                Explore our delicious food collection
-            </p>
-
-            <div className="category-buttons">
-                {categories.map((category) => (
-                    <button
-                        key={category}
-                        className={
-                            selectedCategory === category
-                                ? "active-category"
-                                : ""
-                        }
-                        onClick={() => setSelectedCategory(category)}
-                    >
-                        {category}
-                    </button>
-                ))}
-            </div>
 
             {message && <p>{message}</p>}
 
+            {success && (
+                <p style={{ color: "green", fontWeight: "bold" }}>
+                    {success}
+                </p>
+            )}
+
             <div className="food-list">
-                {filteredFoods.map((food) => (
+                {foods.map((food) => (
                     <div className="food-card" key={food.id || food._id}>
                         <img
-                            src={
-                                food.image ||
-                                "https://placehold.co/500x350?text=Food+Image"
-                            }
+                            src={food.image || "https://placehold.co/500x350?text=Food+Image"}
                             alt={food.name}
-                            className="food-image"
-                            loading="lazy"
                             onError={(e) => {
-                                e.currentTarget.onerror = null;
                                 e.currentTarget.src =
                                     "https://placehold.co/500x350?text=Image+Not+Available";
                             }}
                         />
 
-                        <div className="food-card-content">
-                            <h3>{food.name}</h3>
+                        <h3>{food.name}</h3>
+                        <p>{food.description}</p>
+                        <h4>₹{food.price}</h4>
 
-                            <p>{food.description}</p>
-
-                            <h4>₹{food.price}</h4>
-
-                            <span className="food-category">
-                                {food.category}
-                            </span>
-
-                            {!food.available && (
-                                <p className="unavailable">
-                                    Currently unavailable
-                                </p>
-                            )}
-                        </div>
+                        <button onClick={() => addToCart(food)}>
+                            Add to Cart
+                        </button>
                     </div>
                 ))}
             </div>
 
-            {!message && filteredFoods.length === 0 && (
-                <p>No food items available in this category.</p>
+            {!message && foods.length === 0 && (
+                <p>No food items available yet.</p>
             )}
         </div>
     );
