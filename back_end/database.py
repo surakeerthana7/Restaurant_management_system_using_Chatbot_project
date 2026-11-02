@@ -14,7 +14,7 @@ db = client["restaurant_management"]
 # Collections
 users_collection = db["users"]
 categories_collection = db["categories"]
-menu_collection = db["menuItems"]
+menu_collection = db["menuitems"]
 tables_collection = db["tables"]
 reservations_collection = db["reservations"]
 orders_collection = db["orders"]

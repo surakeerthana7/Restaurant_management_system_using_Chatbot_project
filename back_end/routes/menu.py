@@ -12,7 +12,6 @@ router = APIRouter()
 # Add New Food Item
 @router.post("/")
 def add_menu_item(item: MenuCreate):
-
     item_data = item.model_dump()
     item_data["created_at"] = datetime.utcnow()
 
@@ -24,21 +23,20 @@ def add_menu_item(item: MenuCreate):
     }
 
 
-# Get All Available Food Items
+# Get All Food Items
 @router.get("/")
 def get_menu():
-
     menu_items = []
 
     for item in menu_collection.find():
         menu_items.append({
             "id": str(item["_id"]),
             "name": item["name"],
-            "description": item.get("description"),
+            "description": item.get("description", ""),
             "price": item["price"],
-            "category_id": item["category_id"],
+            "category": item.get("category", ""),
             "image": item.get("image"),
-            "is_available": item.get("is_available", True)
+            "available": item.get("available", True)
         })
 
     return menu_items
@@ -47,51 +45,35 @@ def get_menu():
 # Get Food Item By ID
 @router.get("/{item_id}")
 def get_menu_item(item_id: str):
-
     if not ObjectId.is_valid(item_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid food item ID"
-        )
+        raise HTTPException(status_code=400, detail="Invalid food item ID")
 
-    item = menu_collection.find_one(
-        {"_id": ObjectId(item_id)}
-    )
+    item = menu_collection.find_one({"_id": ObjectId(item_id)})
 
     if not item:
-        raise HTTPException(
-            status_code=404,
-            detail="Food item not found"
-        )
+        raise HTTPException(status_code=404, detail="Food item not found")
 
     return {
         "id": str(item["_id"]),
         "name": item["name"],
-        "description": item.get("description"),
+        "description": item.get("description", ""),
         "price": item["price"],
-        "category_id": item["category_id"],
+        "category": item.get("category", ""),
         "image": item.get("image"),
-        "is_available": item.get("is_available", True)
+        "available": item.get("available", True)
     }
 
 
 # Update Food Item
 @router.put("/{item_id}")
 def update_menu_item(item_id: str, item: MenuUpdate):
-
     if not ObjectId.is_valid(item_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid food item ID"
-        )
+        raise HTTPException(status_code=400, detail="Invalid food item ID")
 
     update_data = item.model_dump(exclude_unset=True)
 
     if not update_data:
-        raise HTTPException(
-            status_code=400,
-            detail="No update details provided"
-        )
+        raise HTTPException(status_code=400, detail="No update details provided")
 
     result = menu_collection.update_one(
         {"_id": ObjectId(item_id)},
@@ -99,36 +81,20 @@ def update_menu_item(item_id: str, item: MenuUpdate):
     )
 
     if result.matched_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Food item not found"
-        )
+        raise HTTPException(status_code=404, detail="Food item not found")
 
-    return {
-        "message": "Food item updated successfully"
-    }
+    return {"message": "Food item updated successfully"}
 
 
 # Delete Food Item
 @router.delete("/{item_id}")
 def delete_menu_item(item_id: str):
-
     if not ObjectId.is_valid(item_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid food item ID"
-        )
+        raise HTTPException(status_code=400, detail="Invalid food item ID")
 
-    result = menu_collection.delete_one(
-        {"_id": ObjectId(item_id)}
-    )
+    result = menu_collection.delete_one({"_id": ObjectId(item_id)})
 
     if result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Food item not found"
-        )
+        raise HTTPException(status_code=404, detail="Food item not found")
 
-    return {
-        "message": "Food item deleted successfully"
-    }
+    return {"message": "Food item deleted successfully"}
